@@ -20,4 +20,4 @@ Before=sysinit.target
 What=debugfs
 Where=/sys/kernel/debug
 Type=debugfs
-Options=nosuid,nodev,noexec
+Options=nosuid,nodev,noexec,mode=0755
