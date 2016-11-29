@@ -15,9 +15,10 @@ enable remote-cryptsetup.target
 enable machines.target
 
 enable getty@.service
-enable systemd-timesyncd.service
-enable systemd-networkd.service
-enable systemd-resolved.service
+disable systemd-timesyncd.service
+disable systemd-networkd.service
+disable systemd-resolved.service
+disable rsyslog.service
 
 disable console-getty.service
 disable debug-shell.service
