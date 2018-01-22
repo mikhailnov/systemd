@@ -808,14 +808,10 @@ static int fd_set_xattrs(Item *i, int fd, const struct stat *st) {
         xsprintf(procfs_path, "/proc/self/fd/%i", fd);
 
         STRV_FOREACH_PAIR(name, value, i->xattrs) {
-                int n;
-
-                n = strlen(*value);
                 log_debug("Setting extended attribute '%s=%s' on %s.", *name, *value, path);
-                if (setxattr(procfs_path, *name, *value, n, 0) < 0) {
-                        log_error("Setting extended attribute %s=%s on %s failed: %m", *name, *value, path);
-                        return -errno;
-                }
+                if (setxattr(procfs_path, *name, *value, strlen(*value), 0) < 0)
+                        return log_error_errno(errno, "Setting extended attribute %s=%s on %s failed: %m",
+                                               *name, *value, path);
         }
         return 0;
 }
