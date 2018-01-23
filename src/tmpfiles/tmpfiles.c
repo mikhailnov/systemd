@@ -1378,12 +1378,19 @@ static int create_item(Item *i) {
 
         case CREATE_FILE:
         case TRUNCATE_FILE:
+                RUN_WITH_UMASK(0000)
+                        (void) mkdir_parents_label(i->path, 0755);
+
                 r = write_one_file(i, i->path);
                 if (r < 0)
                         return r;
                 break;
 
         case COPY_FILES: {
+
+                RUN_WITH_UMASK(0000)
+                        (void) mkdir_parents_label(i->path, 0755);
+
                 r = specifier_printf(i->argument, specifier_table, NULL, &resolved);
                 if (r < 0)
                         return log_error_errno(r, "Failed to substitute specifiers in copy source %s: %m", i->argument);
@@ -1431,7 +1438,7 @@ static int create_item(Item *i) {
         case CREATE_SUBVOLUME_INHERIT_QUOTA:
         case CREATE_SUBVOLUME_NEW_QUOTA:
                 RUN_WITH_UMASK(0000)
-                        mkdir_parents_label(i->path, 0755);
+                        (void) mkdir_parents_label(i->path, 0755);
 
                 if (IN_SET(i->type, CREATE_SUBVOLUME, CREATE_SUBVOLUME_INHERIT_QUOTA, CREATE_SUBVOLUME_NEW_QUOTA)) {
 
@@ -1514,6 +1521,8 @@ static int create_item(Item *i) {
 
         case CREATE_FIFO:
                 RUN_WITH_UMASK(0000) {
+                        (void) mkdir_parents_label(i->path, 0755);
+
                         mac_selinux_create_file_prepare(i->path, S_IFIFO);
                         r = mkfifo(i->path, i->mode);
                         mac_selinux_create_file_clear();
@@ -1556,6 +1565,8 @@ static int create_item(Item *i) {
         }
 
         case CREATE_SYMLINK: {
+                RUN_WITH_UMASK(0000)
+                        (void) mkdir_parents_label(i->path, 0755);
                 r = specifier_printf(i->argument, specifier_table, NULL, &resolved);
                 if (r < 0)
                         return log_error_errno(r, "Failed to substitute specifiers in symlink target %s: %m", i->argument);
@@ -1608,6 +1619,9 @@ static int create_item(Item *i) {
                         log_debug("We lack CAP_MKNOD, skipping creation of device node %s.", i->path);
                         return 0;
                 }
+
+                RUN_WITH_UMASK(0000)
+                        (void) mkdir_parents_label(i->path, 0755);
 
                 file_type = i->type == CREATE_BLOCK_DEVICE ? S_IFBLK : S_IFCHR;
 
