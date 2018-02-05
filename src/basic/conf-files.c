@@ -142,22 +142,22 @@ int conf_files_insert(char ***strv, const char *root, const char *dirs, const ch
 
                 c = base_cmp(*strv + i, &path);
                 if (c == 0) {
-                        const char *dir;
+                        char **dir;
 
                         /* Oh, we found our spot and it already contains something. */
-                        NULSTR_FOREACH(dir, dirs) {
+                        STRV_FOREACH(dir, dirs) {
                                 char *p1, *p2;
 
                                 p1 = path_startswith((*strv)[i], root);
                                 if (p1)
-                                        /* Skip "/" in dir, because p1 is without "/" too */
-                                        p1 = path_startswith(p1, dir + 1);
+                                        /* Skip "/" in *dir, because p1 is without "/" too */
+                                        p1 = path_startswith(p1, *dir + 1);
                                 if (p1)
                                         /* Existing entry with higher priority
                                          * or same priority, no need to do anything. */
                                         return 0;
 
-                                p2 = path_startswith(path, dir);
+                                p2 = path_startswith(path, *dir);
                                 if (p2) {
                                         /* Our new entry has higher priority */
                                         t = path_join(root, path, NULL);
@@ -184,6 +184,18 @@ int conf_files_insert(char ***strv, const char *root, const char *dirs, const ch
         if (r < 0)
                 free(t);
         return r;
+}
+
+int conf_files_insert_nulstr(char ***strv, const char *root, const char *dirs, const char *path) {
+        _cleanup_strv_free_ char **d = NULL;
+
+        assert(strv);
+
+        d = strv_split_nulstr(dirs);
+        if (!d)
+                return -ENOMEM;
+
+        return conf_files_insert(strv, root, d, path);
 }
 
 int conf_files_list_strv(char ***strv, const char *suffix, const char *root, const char* const* dirs) {
@@ -216,15 +228,15 @@ int conf_files_list(char ***strv, const char *suffix, const char *root, const ch
         return conf_files_list_strv_internal(strv, suffix, root, dirs);
 }
 
-int conf_files_list_nulstr(char ***strv, const char *suffix, const char *root, const char *d) {
-        _cleanup_strv_free_ char **dirs = NULL;
+int conf_files_list_nulstr(char ***strv, const char *suffix, const char *root, const char *dirs) {
+        _cleanup_strv_free_ char **d = NULL;
 
         assert(strv);
         assert(suffix);
 
-        dirs = strv_split_nulstr(d);
-        if (!dirs)
+        d = strv_split_nulstr(dirs);
+        if (!d)
                 return -ENOMEM;
 
-        return conf_files_list_strv_internal(strv, suffix, root, dirs);
+        return conf_files_list_strv_internal(strv, suffix, root, d);
 }
