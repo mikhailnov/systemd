@@ -382,6 +382,7 @@ static int write_files(void) {
         bool group_changed = false;
         struct passwd *pw = NULL;
         struct group *gr = NULL;
+        struct spwd *sp = NULL;
         Iterator iterator;
         Item *i;
         int r;
@@ -662,7 +663,6 @@ static int write_files(void) {
 
                 original = fopen(shadow_path, "re");
                 if (original) {
-                        struct spwd *sp;
 
                         r = sync_rights(original, shadow);
                         if (r < 0)
@@ -683,6 +683,11 @@ static int write_files(void) {
                                 }
 
                                 errno = 0;
+
+                                /* Make sure we keep the NIS entries (if any) at the end. */
+                                if (IN_SET(sp->sp_namp[0], '+', '-'))
+                                        break;
+
                                 if (putspent(sp, shadow) < 0) {
                                         r = errno ? -errno : -EIO;
                                         goto finish;
@@ -720,7 +725,22 @@ static int write_files(void) {
                                 r = errno ? -errno : -EIO;
                                 goto finish;
                         }
+
                 }
+
+                errno = 0;
+
+                /* Append the remaining NIS entries if any */
+                while (sp) {
+                        errno = 0;
+                        if (putspent(sp, shadow) < 0)
+                                return errno ? -errno : -EIO;
+
+                        errno = 0;
+                        sp = fgetspent(original);
+                }
+                if (!IN_SET(errno, 0, ENOENT))
+                        return -errno;
 
                 r = fflush_and_check(shadow);
                 if (r < 0)
