@@ -121,12 +121,12 @@ static int load_user_database(void) {
 
                 q = hashmap_put(database_uid, UID_TO_PTR(pw->pw_uid), n);
                 if (q < 0 && q != -EEXIST) {
-                        if (k < 0)
+                        if (k <= 0)
                                 free(n);
                         return q;
                 }
 
-                if (q < 0 && k < 0)
+                if (q <= 0 && k <= 0)
                         free(n);
 
                 errno = 0;
@@ -173,12 +173,12 @@ static int load_group_database(void) {
 
                 q = hashmap_put(database_gid, GID_TO_PTR(gr->gr_gid), n);
                 if (q < 0 && q != -EEXIST) {
-                        if (k < 0)
+                        if (k <= 0)
                                 free(n);
                         return q;
                 }
 
-                if (q < 0 && k < 0)
+                if (q <= 0 && k <= 0)
                         free(n);
 
                 errno = 0;
