@@ -72,19 +72,31 @@
 #define NOTIFY_FD_MAX 768
 #define NOTIFY_BUFFER_MAX PIPE_BUF
 
-#ifdef HAVE_SPLIT_USR
-#define _CONF_PATHS_SPLIT_USR(n) "/lib/" n "\0"
+#if HAVE_SPLIT_USR
+#  define _CONF_PATHS_SPLIT_USR_NULSTR(n) "/lib/" n "\0"
+#  define _CONF_PATHS_SPLIT_USR(n) , "/lib/" n
 #else
-#define _CONF_PATHS_SPLIT_USR(n)
+#  define _CONF_PATHS_SPLIT_USR_NULSTR(n)
+#  define _CONF_PATHS_SPLIT_USR(n)
 #endif
 
 /* Return a nulstr for a standard cascade of configuration paths,
  * suitable to pass to conf_files_list_nulstr() or config_parse_many()
  * to implement drop-in directories for extending configuration
  * files. */
-#define CONF_PATHS_NULSTR(n) \
-        "/etc/" n "\0" \
-        "/run/" n "\0" \
-        "/usr/local/lib/" n "\0" \
-        "/usr/lib/" n "\0" \
-        _CONF_PATHS_SPLIT_USR(n)
+#define CONF_PATHS_NULSTR(n)                    \
+        "/etc/" n "\0"                          \
+        "/run/" n "\0"                          \
+        "/usr/local/lib/" n "\0"                \
+        "/usr/lib/" n "\0"                      \
+        _CONF_PATHS_SPLIT_USR_NULSTR(n)
+
+#define CONF_PATHS_STRV(n)                      \
+        STRV_MAKE(                              \
+                "/etc/" n,                      \
+                "/run/" n,                      \
+                "/usr/local/lib/" n,            \
+                "/usr/lib/" n                   \
+                _CONF_PATHS_SPLIT_USR(n))
+
+#define LONG_LINE_MAX (1U*1024U*1024U)
