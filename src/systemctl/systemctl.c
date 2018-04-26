@@ -4912,6 +4912,18 @@ static int cat(int argc, char *argv[], void *userdata) {
                         if (r < 0)
                                 return log_warning_errno(r, "Failed to cat %s: %m", *path);
                 }
+                if (need_daemon_reload(bus, *name) > 0) /* ignore errors (<0), this is informational output */
+                        fprintf(stderr,
+                                "%s# Warning: %s changed on disk, the version systemd has loaded is outdated.\n"
+                                "%s# This output shows the current version of the unit's original fragment and drop-in files.\n"
+                                "%s# If fragments or drop-ins were added or removed, they are not properly reflected in this output.\n"
+                                "%s# Run 'systemctl%s daemon-reload' to reload units.%s\n",
+                                *name,
+                                arg_scope == UNIT_FILE_SYSTEM ? "" : " --user"),
+
+                r = cat_files(fragment_path, dropin_paths, 0);
+                if (r < 0)
+                        return r;
         }
 
         return 0;

@@ -124,3 +124,9 @@ int ptsname_namespace(int pty, char **ret);
 
 int openpt_in_namespace(pid_t pid, int flags);
 int open_terminal_in_namespace(pid_t pid, const char *name, int mode);
+
+typedef enum CatFlags {
+        CAT_FLAGS_MAIN_FILE_OPTIONAL = 1 << 1,
+} CatFlags;
+
+int cat_files(const char *file, char **dropins, CatFlags flags);

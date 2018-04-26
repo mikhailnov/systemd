@@ -27,6 +27,8 @@
 #include "macro.h"
 #include "terminal-util.h"
 #include "util.h"
+#include "copy.h"
+#include "strv.h"
 
 static void test_default_term_for_tty(void) {
         puts(default_term_for_tty("/dev/tty23"));

@@ -30,12 +30,18 @@
 #include "bus-error.h"
 #include "bus-unit-util.h"
 #include "bus-util.h"
+#include "calendarspec.h"
+#include "conf-files.h"
 #include "glob-util.h"
 #include "hashmap.h"
 #include "locale-util.h"
 #include "log.h"
 #include "pager.h"
+#include "path-util.h"
 #include "parse-util.h"
+#if HAVE_SECCOMP
+#include "seccomp-util.h"
+#endif
 #include "special.h"
 #include "strv.h"
 #include "strxcpyx.h"
@@ -1218,6 +1224,29 @@ static int dump(sd_bus *bus, char **args) {
                 return bus_log_parse_error(r);
 
         fputs(text, stdout);
+        return 0;
+}
+
+static int cat_config(int argc, char *argv[], void *userdata) {
+        char **arg;
+        int r;
+
+        (void) pager_open(arg_no_pager, false);
+
+        STRV_FOREACH(arg, argv + 1) {
+                if (arg != argv + 1)
+                        puts("");
+
+                if (path_is_absolute(*arg)) {
+                        log_error("Arguments must be config file names (relative to /etc/");
+                        return -EINVAL;
+                }
+
+                r = conf_files_cat(*arg);
+                if (r < 0)
+                        return r;
+        }
+
         return 0;
 }
 

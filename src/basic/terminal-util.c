@@ -53,6 +53,8 @@
 #include "terminal-util.h"
 #include "time-util.h"
 #include "util.h"
+#include "copy.h"
+#include "strv.h"
 
 static volatile unsigned cached_columns = 0;
 static volatile unsigned cached_lines = 0;
@@ -1150,4 +1152,41 @@ bool colors_enabled(void) {
         }
 
         return enabled;
+}
+
+static int cat_file(const char *filename, bool newline) {
+        _cleanup_close_ int fd;
+
+        fd = open(filename, O_RDONLY|O_CLOEXEC|O_NOCTTY);
+        if (fd < 0)
+                return -errno;
+
+        printf("%s%s# %s%s\n",
+               newline ? "\n" : "",
+               filename);
+        fflush(stdout);
+
+        return copy_bytes(fd, STDOUT_FILENO, (uint64_t) -1, 0);
+}
+
+int cat_files(const char *file, char **dropins, CatFlags flags) {
+        char **path;
+        int r;
+
+        if (file) {
+                r = cat_file(file, false);
+                if (r == -ENOENT && (flags & CAT_FLAGS_MAIN_FILE_OPTIONAL))
+                        printf("Config file %s not found\n",
+                               file);
+                else if (r < 0)
+                        return log_warning_errno(r, "Failed to cat %s: %m", file);
+        }
+
+        STRV_FOREACH(path, dropins) {
+                r = cat_file(*path, file || path != dropins);
+                if (r < 0)
+                        return log_warning_errno(r, "Failed to cat %s: %m", *path);
+        }
+
+        return 0;
 }
