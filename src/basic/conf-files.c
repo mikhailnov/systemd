@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "conf-files.h"
+#include "def.h"
 #include "dirent-util.h"
 #include "fd-util.h"
 #include "hashmap.h"
@@ -34,6 +35,7 @@
 #include "path-util.h"
 #include "string-util.h"
 #include "strv.h"
+#include "terminal-util.h"
 #include "util.h"
 
 static int files_add(Hashmap *h, const char *root, const char *path, const char *suffix) {
@@ -239,4 +241,27 @@ int conf_files_list_nulstr(char ***strv, const char *suffix, const char *root, c
                 return -ENOMEM;
 
         return conf_files_list_strv_internal(strv, suffix, root, d);
+}
+
+int conf_files_cat(const char *name) {
+        _cleanup_strv_free_ char **dirs = NULL, **files = NULL;
+        const char *dir;
+        char **t;
+        int r;
+
+        NULSTR_FOREACH(dir, CONF_PATHS_NULSTR("")) {
+                assert(endswith(dir, "/"));
+                r = strv_extendf(&dirs, "%s%s.d", dir, name);
+                if (r < 0)
+                        return log_error("Failed to build directory list: %m");
+        }
+
+        r = conf_files_list_strv(&files, ".conf", NULL, (const char* const*) dirs);
+        if (r < 0)
+                return log_error_errno(r, "Failed to query file list: %m");
+
+        name = strjoina("/etc/", name);
+
+        /* show */
+        return cat_files(name, files, CAT_FLAGS_MAIN_FILE_OPTIONAL);
 }
