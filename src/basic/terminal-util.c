@@ -39,6 +39,9 @@
 #include <unistd.h>
 
 #include "alloc-util.h"
+#include "copy.h"
+#include "def.h"
+#include "env-util.h"
 #include "fd-util.h"
 #include "fileio.h"
 #include "fs-util.h"
@@ -1155,10 +1158,11 @@ bool colors_enabled(void) {
 }
 
 static int cat_file(const char *filename, bool newline) {
-        _cleanup_close_ int fd;
+        _cleanup_fclose_ FILE *f = NULL;
+        int r;
 
-        fd = open(filename, O_RDONLY|O_CLOEXEC|O_NOCTTY);
-        if (fd < 0)
+        f = fopen(filename, "re");
+        if (!f)
                 return -errno;
 
         printf("%s%s# %s%s\n",
@@ -1166,7 +1170,19 @@ static int cat_file(const char *filename, bool newline) {
                filename);
         fflush(stdout);
 
-        return copy_bytes(fd, STDOUT_FILENO, (uint64_t) -1, 0);
+        for (;;) {
+                _cleanup_free_ char *line = NULL;
+
+                r = read_line(f, LONG_LINE_MAX, &line);
+                if (r < 0)
+                        return log_error_errno(r, "Failed to read \"%s\": %m", filename);
+                if (r == 0)
+                        break;
+
+                puts(line);
+        }
+
+        return 0;
 }
 
 int cat_files(const char *file, char **dropins, CatFlags flags) {
