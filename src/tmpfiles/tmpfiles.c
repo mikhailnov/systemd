@@ -2063,8 +2063,10 @@ static int parse_line(const char *fname, unsigned line, const char *buffer) {
         } else {
                 existing = new0(ItemArray, 1);
                 r = ordered_hashmap_put(h, i.path, existing);
-                if (r < 0)
+                if (r < 0) {
+                        free(existing);
                         return log_oom();
+                }
         }
 
         if (!GREEDY_REALLOC(existing->items, existing->size, existing->count + 1))
