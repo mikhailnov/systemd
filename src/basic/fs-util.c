@@ -33,6 +33,7 @@
 #include "fd-util.h"
 #include "fileio.h"
 #include "fs-util.h"
+#include "locale-util.h"
 #include "log.h"
 #include "macro.h"
 #include "missing.h"
@@ -534,6 +535,20 @@ static bool unsafe_transition(const struct stat *a, const struct stat *b) {
                 return false;
 
         return a->st_uid != b->st_uid; /* Otherwise we need to stay within the same UID */
+}
+
+static int log_unsafe_transition(int a, int b, const char *path, unsigned flags) {
+        _cleanup_free_ char *n1 = NULL, *n2 = NULL;
+
+        if (!FLAGS_SET(flags, CHASE_WARN))
+                return -EPERM;
+
+        (void) fd_get_path(a, &n1);
+        (void) fd_get_path(b, &n2);
+
+        return log_warning_errno(SYNTHETIC_ERRNO(EPERM),
+                                 "Detected unsafe path transition %s %s %s during canonicalization of %s.",
+                                 n1, special_glyph(ARROW), n2, path);
 }
 
 int chase_symlinks(const char *path, const char *original_root, unsigned flags, char **ret) {
