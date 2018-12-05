@@ -25,6 +25,8 @@
  * size. See COREDUMP_MAX in coredump.c */
 #define ENTRY_SIZE_MAX (1024*1024*770u)
 #define DATA_SIZE_MAX (1024*1024*768u)
+/* The maximum number of fields in an entry */
+#define ENTRY_FIELD_COUNT_MAX 1024
 
 bool valid_user_field(const char *p, size_t l, bool allow_protected);
 
