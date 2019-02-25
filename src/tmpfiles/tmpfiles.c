@@ -739,7 +739,7 @@ static int path_open_safe(const char *path) {
                 return -EINVAL;
         }
 
-        fd = chase_symlinks(path, NULL, CHASE_OPEN|CHASE_SAFE|CHASE_NOFOLLOW|CHASE_WARN, NULL);
+        fd = chase_symlinks(path, arg_root, CHASE_OPEN|CHASE_SAFE|CHASE_NOFOLLOW|CHASE_WARN, NULL);
         if (fd == -EPERM)
                 return log_error_errno(fd, "Unsafe symlinks encountered in %s, refusing.", path);
         if (fd < 0)
