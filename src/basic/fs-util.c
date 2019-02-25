@@ -766,6 +766,7 @@ int chase_symlinks(const char *path, const char *original_root, unsigned flags, 
                         return -errno;
 
                 if ((flags & CHASE_SAFE) &&
+                    (empty_or_root(root) || (size_t)(todo - buffer) > strlen(root)) &&
                     unsafe_transition(&previous_stat, &st))
                         return log_unsafe_transition(fd, child, path, flags);
 
