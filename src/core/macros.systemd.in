@@ -103,3 +103,50 @@ echo %{?*} | systemd-sysusers - >/dev/null 2>&1 || : \
 %binfmt_apply() \
 @rootlibexecdir@/systemd-binfmt %{?*} >/dev/null 2>&1 || : \
 %{nil}
+
+###############################################################
+#        Backported to systemd-230 from systemd-238           #
+###############################################################
+
+%__systemd_someargs_0() %{error:This macro requires some arguments}
+%__systemd_twoargs_2() %{nil}
+
+# This should be used by package installation scripts which require users or
+# groups to be present before the files installed by the package are present on
+# disk (for example because some files are owned by those users or groups).
+#
+# Example:
+#   Source1: %{name}-sysusers.conf
+#   ...
+#   %install
+#   install -D %SOURCE1 %{buildroot}%{_sysusersdir}/%{name}.conf
+#   %pre
+#   %sysusers_create_package %{name} %SOURCE1
+#   %files
+#   %{_sysusersdir}/%{name}.conf
+%sysusers_create_package() \
+%{expand:%%{?!__systemd_twoargs_%#:%%{error:This macro requires two arguments}}} \
+systemd-sysusers --replace=%_sysusersdir/%1.conf - <<SYSTEMD_INLINE_EOF>/dev/null 2>&1 || : \
+%(cat %2) \
+SYSTEMD_INLINE_EOF\
+%{nil}
+
+# This may be used by package installation scripts to create files according to
+# their tmpfiles configuration from a package installation script, even before
+# the files of that package are installed on disk.
+#
+# Example:
+#   Source1: %{name}-tmpfiles.conf
+#   ...
+#   %install
+#   install -D %SOURCE1 %{buildroot}%{_tmpfilesdir}/%{name}.conf
+#   %pre
+#   %tmpfiles_create_package %{name} %SOURCE1
+#   %files
+#   %{_tmpfilesdir}/%{name}.conf
+%tmpfiles_create_package() \
+%{expand:%%{?!__systemd_twoargs_%#:%%{error:This macro requires two arguments}}} \
+systemd-tmpfiles --replace=%_tmpfilesdir/%1.conf --create - <<SYSTEMD_INLINE_EOF>/dev/null 2>&1 || : \
+%(cat %2) \
+SYSTEMD_INLINE_EOF\
+%{nil}
