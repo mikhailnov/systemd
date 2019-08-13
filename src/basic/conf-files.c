@@ -305,3 +305,61 @@ int conf_files_cat(const char *name) {
         /* show */
         return cat_files(name, files, CAT_FLAGS_MAIN_FILE_OPTIONAL);
 }
+
+int conf_files_list_with_replacement(
+                const char *root,
+                char **config_dirs,
+                const char *replacement,
+                char ***files,
+                char **replace_file) {
+
+        _cleanup_strv_free_ char **f = NULL;
+        _cleanup_free_ char *p = NULL;
+        int r;
+
+        assert(config_dirs);
+        assert(files);
+        assert(replace_file || !replacement);
+
+        r = conf_files_list_strv(&f, ".conf", root, (const char* const*) config_dirs);
+        if (r < 0)
+                return log_error_errno(r, "Failed to enumerate config files: %m");
+
+        if (replacement) {
+                r = conf_files_insert(&f, root, config_dirs, replacement);
+                if (r < 0)
+                        return log_error_errno(r, "Failed to extend config file list: %m");
+
+                p = prefix_root(root, replacement);
+                if (!p)
+                        return log_oom();
+        }
+
+        *files = TAKE_PTR(f);
+        if (replace_file)
+                *replace_file = TAKE_PTR(p);
+        return 0;
+}
+
+int conf_files_cat(const char *name) {
+        _cleanup_strv_free_ char **dirs = NULL, **files = NULL;
+        const char *dir;
+        char **t;
+        int r;
+
+        NULSTR_FOREACH(dir, CONF_PATHS_NULSTR("")) {
+                assert(endswith(dir, "/"));
+                r = strv_extendf(&dirs, "%s%s.d", dir, name);
+                if (r < 0)
+                        return log_error("Failed to build directory list: %m");
+        }
+
+        r = conf_files_list_strv(&files, ".conf", NULL, (const char* const*) dirs);
+        if (r < 0)
+                return log_error_errno(r, "Failed to query file list: %m");
+
+        name = strjoina("/etc/", name);
+
+        /* show */
+        return cat_files(name, files, CAT_FLAGS_MAIN_FILE_OPTIONAL);
+}
