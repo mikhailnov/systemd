@@ -814,3 +814,16 @@ bool is_device_path(const char *path) {
                 path_startswith(path, "/dev/") ||
                 path_startswith(path, "/sys/");
 }
+
+bool dot_or_dot_dot(const char *path) {
+        if (!path)
+                return false;
+        if (path[0] != '.')
+                return false;
+        if (path[1] == 0)
+                return true;
+        if (path[1] != '.')
+                return false;
+
+        return path[2] == 0;
+}
