@@ -18,6 +18,9 @@
 ***/
 
 #include <math.h>
+#ifdef __UCLIBC__
+#define exp10(x) (pow(10, (x)))
+#endif /* __UCLIBC__ */
 
 #include "alloc-util.h"
 #include "dns-domain.h"
