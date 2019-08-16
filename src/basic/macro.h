@@ -26,6 +26,11 @@
 #include <sys/sysmacros.h>
 #include <sys/types.h>
 
+#ifdef __UCLIBC__
+/* uclibc does not implement mkostemp GNU extention */
+#define mkostemp(x,y) mkstemp(x)
+#endif
+
 #define _printf_(a,b) __attribute__ ((format (printf, a, b)))
 #ifdef __clang__
 #  define _alloc_(...)
