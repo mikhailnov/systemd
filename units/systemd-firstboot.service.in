@@ -14,6 +14,7 @@ After=systemd-remount-fs.service
 Before=systemd-sysusers.service sysinit.target shutdown.target
 ConditionPathIsReadWrite=/etc
 ConditionFirstBoot=yes
+ConditionVirtualization=!container
 
 [Service]
 Type=oneshot
