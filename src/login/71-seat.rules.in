@@ -51,4 +51,9 @@ TAG=="seat", ENV{ID_FOR_SEAT}=="", ENV{ID_PATH_TAG}!="", ENV{ID_FOR_SEAT}="$env{
 
 SUBSYSTEM=="input", ATTR{name}=="Wiebetech LLC Wiebetech", RUN+="@rootbindir@/loginctl lock-sessions"
 
+# Setup vconsole for vtconX devices (separate rule needed until v218)
+SUBSYSTEM=="vtconsole", KERNEL=="vtcon*", ACTION=="add", RUN+="@rootlibexecdir@/systemd-vconsole-setup"
+# Setup vconsole for all the vcs devices (to perform font_copy_to_all_vcs)
+SUBSYSTEM=="vc", KERNEL=="vcs[0-9]*", ACTION=="add", RUN+="@rootlibexecdir@/systemd-vconsole-setup"
+
 LABEL="seat_end"
