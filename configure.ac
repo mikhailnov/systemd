@@ -51,7 +51,7 @@ AS_IF([test "x$ax_cv_c_compiler_vendor" = "xgnu"], [
 LT_PREREQ(2.2)
 LT_INIT([disable-static])
 
-AS_IF([test "x$enable_static" = "xyes"], [AC_MSG_ERROR([--enable-static is not supported by systemd])])
+dnl AS_IF([test "x$enable_static" = "xyes"], [AC_MSG_ERROR([--enable-static is not supported by systemd])])
 AS_IF([test "x$enable_largefile" = "xno"], [AC_MSG_ERROR([--disable-largefile is not supported by systemd])])
 
 SET_ARCH(X86_64, x86_64*)
