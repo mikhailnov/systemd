@@ -18,3 +18,5 @@ Type=oneshot
 RemainAfterExit=yes
 ExecStart=@rootlibexecdir@/systemd-fsck %f
 TimeoutSec=0
+StandardOutput=null
+StandardError=journal+console
