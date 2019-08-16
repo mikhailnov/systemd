@@ -838,7 +838,7 @@ static int method_start_transient_unit(sd_bus_message *message, void *userdata, 
         assert(message);
         assert(m);
 
-        r = mac_selinux_access_check(message, "start", error);
+        r = mac_selinux_runtime_unit_access_check(message, "start", error);
         if (r < 0)
                 return r;
 
@@ -976,7 +976,7 @@ static int list_units_filtered(sd_bus_message *message, void *userdata, sd_bus_e
 
         /* Anyone can call this method */
 
-        r = mac_selinux_access_check(message, "status", error);
+        r = mac_selinux_runtime_unit_access_check(message, "status", error);
         if (r < 0)
                 return r;
 

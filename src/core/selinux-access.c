@@ -183,6 +183,7 @@ static int access_init(sd_bus_error *error) {
 */
 int mac_selinux_generic_access_check(
                 sd_bus_message *message,
+                bool system,
                 const char *path,
                 const char *permission,
                 sd_bus_error *error) {
@@ -225,7 +226,9 @@ int mac_selinux_generic_access_check(
         if (r < 0)
                 goto finish;
 
-        if (path) {
+        tclass = "service";
+
+        if (path && !system) {
                 /* Get the file context of the unit file */
 
                 r = getfilecon_raw(path, &fcon);
@@ -234,7 +237,6 @@ int mac_selinux_generic_access_check(
                         goto finish;
                 }
 
-                tclass = "service";
         } else {
                 r = getcon_raw(&fcon);
                 if (r < 0) {
@@ -242,7 +244,8 @@ int mac_selinux_generic_access_check(
                         goto finish;
                 }
 
-                tclass = "system";
+                if (system)
+                        tclass = "system";
         }
 
         sd_bus_creds_get_cmdline(creds, &cmdline);
