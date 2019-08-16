@@ -974,6 +974,14 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svn*:pn*:pvr*:rvnQuanta:rn30B7:rvr65.2B:*
  KEYBOARD_KEY_88=media                                  # "quick play
 
 ###########################################################
+# Packard Bell
+###########################################################
+
+keyboard:dmi:bvn*:bvr*:bd*:svnPackard*Bell*:pnEASYNOTE*:pvr*
+ KEYBOARD_KEY_d5=wlan                                   # (toggle) on-to-off
+ KEYBOARD_KEY_d6=wlan                                   # (toggle) off-to-on
+
+###########################################################
 # Samsung
 ###########################################################
 
