@@ -602,7 +602,7 @@ int chase_symlinks(const char *path, const char *original_root, unsigned flags, 
         if (isempty(original_root) || path_equal(original_root, "/"))
                 original_root = NULL;
 
-        if (!original_root && !ret && (flags & (CHASE_NONEXISTENT|CHASE_NO_AUTOFS|CHASE_SAFE|CHASE_OPEN|CHASE_STEP)) == CHASE_OPEN) {
+        if (!original_root && !ret && (flags & (CHASE_NONEXISTENT|CHASE_SAFE|CHASE_OPEN|CHASE_STEP)) == CHASE_OPEN) {
                 /* Shortcut the CHASE_OPEN case if the caller isn't interested in the actual path and has no root set
                  * and doesn't care about any of the other special features we provide either. */
                 r = open(path, O_PATH|O_CLOEXEC);
