@@ -864,7 +864,7 @@ chased_one:
         if (ret) {
                 char *c;
 
-                c = strjoin(strempty(done), todo);
+                c = strjoin(strempty(done), todo, NULL);
                 if (!c)
                         return -ENOMEM;
 
