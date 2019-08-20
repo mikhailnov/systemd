@@ -46,6 +46,10 @@ typedef enum LogTarget{
         _LOG_TARGET_INVALID = -1
 }  LogTarget;
 
+#define SYNTHETIC_ERRNO(num)                (1 << 30 | (num))
+#define IS_SYNTHETIC_ERRNO(val)             ((val) >> 30 & 1)
+#define ERRNO_VALUE(val)                    (abs(val) & 255)
+
 void log_set_target(LogTarget target);
 void log_set_max_level(int level);
 void log_set_facility(int facility);
