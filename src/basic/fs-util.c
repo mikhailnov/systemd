@@ -534,7 +534,13 @@ static bool unsafe_transition(const struct stat *a, const struct stat *b) {
         if (a->st_uid == 0) /* Transitioning from privileged to unprivileged is always fine */
                 return false;
 
-        return a->st_uid != b->st_uid; /* Otherwise we need to stay within the same UID */
+        if (a->st_uid != b->st_uid) {
+			log_warning("Path transition is not safe because %d and %d are not equal and the first one in not 0.", a->st_uid, b->st_uid);
+			return true; /* Return that it is an UNsafe transition */
+		} else {
+			return false; /* Return that it is a safe transition (not an unsafe one) */
+		}
+
 }
 
 static int log_unsafe_transition(int a, int b, const char *path, unsigned flags) {
