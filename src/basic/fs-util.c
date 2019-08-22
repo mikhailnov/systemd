@@ -546,7 +546,7 @@ static int log_unsafe_transition(int a, int b, const char *path, unsigned flags)
         (void) fd_get_path(a, &n1);
         (void) fd_get_path(b, &n2);
 
-        return log_warning_errno(SYNTHETIC_ERRNO(EPERM),
+        return log_warning_errno(SYNTHETIC_ERRNO(-EPERM),
                                  "Detected unsafe path transition %s %s %s during canonicalization of %s.",
                                  n1, special_glyph(ARROW), n2, path);
 }
