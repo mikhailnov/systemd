@@ -127,3 +127,4 @@ bool hidden_or_backup_file(const char *filename) _pure_;
 
 bool is_device_path(const char *path);
 bool dot_or_dot_dot(const char *path);
+bool empty_or_root(const char *root);

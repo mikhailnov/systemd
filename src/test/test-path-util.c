@@ -543,6 +543,19 @@ static void test_hidden_or_backup_file(void) {
         assert_se(!hidden_or_backup_file("test.dpkg-old.foo"));
 }
 
+static void test_empty_or_root(void) {
+        assert_se(empty_or_root(NULL));
+        assert_se(empty_or_root(""));
+        assert_se(empty_or_root("/"));
+        assert_se(empty_or_root("//"));
+        assert_se(empty_or_root("///"));
+        assert_se(empty_or_root("/////////////////"));
+        assert_se(!empty_or_root("xxx"));
+        assert_se(!empty_or_root("/xxx"));
+        assert_se(!empty_or_root("/xxx/"));
+        assert_se(!empty_or_root("//yy//"));
+}
+
 int main(int argc, char **argv) {
         test_path();
         test_path_equal_root();
@@ -558,6 +571,7 @@ int main(int argc, char **argv) {
         test_file_in_same_dir();
         test_filename_is_valid();
         test_hidden_or_backup_file();
+        test_empty_or_root();
 
         return 0;
 }

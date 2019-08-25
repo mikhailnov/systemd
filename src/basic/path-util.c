@@ -845,3 +845,14 @@ bool dot_or_dot_dot(const char *path) {
 
         return path[2] == 0;
 }
+
+bool empty_or_root(const char *root) {
+
+        /* For operations relative to some root directory, returns true if the specified root directory is redundant,
+         * i.e. either / or NULL or the empty string or any equivalent. */
+
+        if (!root)
+                return true;
+
+        return root[strspn(root, "/")] == 0;
+}
