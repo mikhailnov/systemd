@@ -1490,8 +1490,10 @@ static int create_item(Item *i) {
                         r = 0;
 
                 if (IN_SET(i->type, CREATE_DIRECTORY, TRUNCATE_DIRECTORY) || r == -ENOTTY)
-                        RUN_WITH_UMASK(0000)
+                        RUN_WITH_UMASK(0000) {
+                                log_debug("Creating or truncating directory %s with mode %d", i->path, i->mode);
                                 r = mkdir_label(i->path, i->mode);
+                        }
 
                 if (r < 0) {
                         int k;
