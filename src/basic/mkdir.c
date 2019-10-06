@@ -28,6 +28,7 @@
 #include "path-util.h"
 #include "stat-util.h"
 #include "user-util.h"
+#include "selinux-util.h"
 
 int mkdir_safe_internal(const char *path, mode_t mode, uid_t uid, gid_t gid, mkdir_func_t _mkdir) {
         struct stat st;
@@ -38,6 +39,7 @@ int mkdir_safe_internal(const char *path, mode_t mode, uid_t uid, gid_t gid, mkd
                 if (r < 0)
                         return r;
         }
+        mac_selinux_fix(path, 1, 1);
 
         if (lstat(path, &st) < 0)
                 return -errno;
@@ -103,6 +105,7 @@ int mkdir_parents_internal(const char *prefix, const char *path, mode_t mode, mk
                 r = _mkdir(t, mode);
                 if (r < 0 && errno != EEXIST)
                         return -errno;
+                mac_selinux_fix(t, 1, 1);
         }
 }
 
@@ -122,6 +125,7 @@ int mkdir_p_internal(const char *prefix, const char *path, mode_t mode, mkdir_fu
         r = _mkdir(path, mode);
         if (r < 0 && (errno != EEXIST || is_dir(path, true) <= 0))
                 return -errno;
+        mac_selinux_fix(path, 1, 1);
 
         return 0;
 }
