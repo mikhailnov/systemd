@@ -14,7 +14,7 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-DynamicUser=yes
+#DynamicUser=yes
 ExecStart=@rootlibexecdir@/systemd-journal-upload --save-state
 LockPersonality=yes
 MemoryDenyWriteExecute=yes
