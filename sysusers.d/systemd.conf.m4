@@ -18,3 +18,8 @@ u systemd-timesync  - "systemd Time Synchronization"
 m4_ifdef(`ENABLE_COREDUMP',
 u systemd-coredump  - "systemd Core Dumper"
 )m4_dnl
+# https://github.com/systemd/systemd/commit/4240cb02fda90ba11dfc0114201e42691132c6a9
+m4_ifdef(`HAVE_LIBCURL',
+u systemd-journal-upload  - "systemd Journal Upload"
+u systemd-journal-gateway - "systemd Journal Gateway"
+)m4_dnl
