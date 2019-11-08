@@ -258,12 +258,16 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 .help = "System calls that are always permitted",
                 .value =
                 "clock_getres\0"
+                "clock_getres_time64\0"
                 "clock_gettime\0"
+                "clock_gettime64\0"
                 "clock_nanosleep\0"
+                "clock_nanosleep_time64\0"
                 "execve\0"
                 "exit\0"
                 "exit_group\0"
                 "futex\0"
+                "futex_time64\0"
                 "get_robust_list\0"
                 "get_thread_area\0"
                 "getegid\0"
@@ -312,6 +316,7 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "io_destroy\0"
                 "io_getevents\0"
                 "io_pgetevents\0"
+                "io_pgetevents_time64\0"
                 "io_setup\0"
                 "io_submit\0"
         },
@@ -354,7 +359,9 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 .value =
                 "adjtimex\0"
                 "clock_adjtime\0"
+                "clock_adjtime64\0"
                 "clock_settime\0"
+                "clock_settime64\0"
                 "settimeofday\0"
                 "stime\0"
         },
@@ -462,6 +469,7 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "unlinkat\0"
                 "utime\0"
                 "utimensat\0"
+                "utimensat_time64\0"
                 "utimes\0"
         },
         [SYSCALL_FILTER_SET_IO_EVENT] = {
@@ -480,7 +488,9 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "eventfd2\0"
                 "poll\0"
                 "ppoll\0"
+                "ppoll_time64\0"
                 "pselect6\0"
+                "pselect6_time64\0"
                 "select\0"
         },
         [SYSCALL_FILTER_SET_IPC] = {
@@ -493,7 +503,9 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "mq_notify\0"
                 "mq_open\0"
                 "mq_timedreceive\0"
+                "mq_timedreceive_time64\0"
                 "mq_timedsend\0"
+                "mq_timedsend_time64\0"
                 "mq_unlink\0"
                 "msgctl\0"
                 "msgget\0"
@@ -507,6 +519,7 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "semget\0"
                 "semop\0"
                 "semtimedop\0"
+                "semtimedop_time64\0"
                 "shmat\0"
                 "shmctl\0"
                 "shmdt\0"
@@ -563,6 +576,7 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "recv\0"
                 "recvfrom\0"
                 "recvmmsg\0"
+                "recvmmsg_time64\0"
                 "recvmsg\0"
                 "send\0"
                 "sendmmsg\0"
@@ -735,6 +749,7 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "rt_sigprocmask\0"
                 "rt_sigsuspend\0"
                 "rt_sigtimedwait\0"
+                "rt_sigtimedwait_time64\0"
                 "sigaction\0"
                 "sigaltstack\0"
                 "signal\0"
@@ -814,6 +829,7 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "sched_getparam\0"
                 "sched_getscheduler\0"
                 "sched_rr_get_interval\0"
+                "sched_rr_get_interval_time64\0"
                 "sched_yield\0"
                 "sendfile\0"
                 "sendfile64\0"
@@ -842,10 +858,14 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "timer_delete\0"
                 "timer_getoverrun\0"
                 "timer_gettime\0"
+                "timer_gettime64\0"
                 "timer_settime\0"
+                "timer_settime64\0"
                 "timerfd_create\0"
                 "timerfd_gettime\0"
+                "timerfd_gettime64\0"
                 "timerfd_settime\0"
+                "timerfd_settime64\0"
                 "times\0"
         },
 };
