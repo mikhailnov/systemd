@@ -381,10 +381,6 @@ static int patch_var_run(
         if (!z)
                 return log_oom();
 
-        log_syntax(unit, LOG_NOTICE, filename, line, 0,
-                   "%s= references a path below legacy directory /var/run/, updating %s → %s; "
-                   "please update the unit file accordingly.", lvalue, *path, z);
-
         free_and_replace(*path, z);
 
         return 1;
