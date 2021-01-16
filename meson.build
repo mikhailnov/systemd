@@ -511,7 +511,7 @@ foreach ident : [
                                  #include <sys/stat.h>
                                  #include <unistd.h>'''],
         ['explicit_bzero' ,   '''#include <string.h>'''],
-        ['reallocarray',      '''#include <malloc.h>'''],
+        ['reallocarray',      '''#include <stdlib.h>'''],
         ['set_mempolicy',     '''#include <stdlib.h>
                                  #include <unistd.h>'''],
         ['get_mempolicy',     '''#include <stdlib.h>
@@ -3432,7 +3432,7 @@ foreach tuple : sanitizers
                         prev = name
 
                         if want_tests != 'false' and (slow_tests or fuzz_tests)
-                                test('@0@:@1@:@2@'.format(b, c, sanitizer),
+                                test('@0@_@1@_@2@'.format(b, c, sanitizer),
                                      env,
                                      env : ['UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1'],
                                      timeout : 60,
