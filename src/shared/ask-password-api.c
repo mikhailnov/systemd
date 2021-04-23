@@ -617,10 +617,10 @@ int ask_password_tty(
                                  * last one begins */
                                 q = 0;
                                 for (;;) {
-                                        size_t z;
+                                        int z;
 
                                         z = utf8_encoded_valid_unichar(passphrase + q, (size_t) -1);
-                                        if (z == 0) {
+                                        if (z <= 0) {
                                                 q = (size_t) -1; /* Invalid UTF8! */
                                                 break;
                                         }
@@ -946,6 +946,10 @@ int ask_password_agent(
                 n = recvmsg_safe(socket_fd, &msghdr, 0);
                 if (IN_SET(n, -EAGAIN, -EINTR))
                         continue;
+                if (n == -EXFULL) {
+                        log_debug("Got message with truncated control data, ignoring.");
+                        continue;
+                }
                 if (n < 0) {
                         r = (int) n;
                         goto finish;

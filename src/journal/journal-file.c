@@ -208,6 +208,7 @@ static bool journal_file_set_offline_try_restart(JournalFile *f) {
  * context without involving another thread.
  */
 int journal_file_set_offline(JournalFile *f, bool wait) {
+        int target_state;
         bool restarted;
         int r;
 
@@ -219,9 +220,13 @@ int journal_file_set_offline(JournalFile *f, bool wait) {
         if (f->fd < 0 || !f->header)
                 return -EINVAL;
 
+        target_state = f->archive ? STATE_ARCHIVED : STATE_OFFLINE;
+
         /* An offlining journal is implicitly online and may modify f->header->state,
-         * we must also join any potentially lingering offline thread when not online. */
-        if (!journal_file_is_offlining(f) && f->header->state != STATE_ONLINE)
+         * we must also join any potentially lingering offline thread when already in
+         * the desired offline state.
+         */
+        if (!journal_file_is_offlining(f) && f->header->state == target_state)
                 return journal_file_set_offline_thread_join(f);
 
         /* Restart an in-flight offline thread and wait if needed, or join a lingering done one. */
@@ -989,31 +994,59 @@ int journal_file_move_to_object(JournalFile *f, ObjectType type, uint64_t offset
         return 0;
 }
 
-static uint64_t journal_file_entry_seqnum(JournalFile *f, uint64_t *seqnum) {
-        uint64_t r;
+static uint64_t journal_file_entry_seqnum(
+                JournalFile *f,
+                uint64_t *seqnum) {
+
+        uint64_t ret;
 
         assert(f);
         assert(f->header);
 
-        r = le64toh(f->header->tail_entry_seqnum) + 1;
+        /* Picks a new sequence number for the entry we are about to add and returns it. */
+
+        ret = le64toh(f->header->tail_entry_seqnum) + 1;
 
         if (seqnum) {
-                /* If an external seqnum counter was passed, we update
-                 * both the local and the external one, and set it to
-                 * the maximum of both */
+                /* If an external seqnum counter was passed, we update both the local and the external one,
+                 * and set it to the maximum of both */
 
-                if (*seqnum + 1 > r)
-                        r = *seqnum + 1;
+                if (*seqnum + 1 > ret)
+                        ret = *seqnum + 1;
 
-                *seqnum = r;
+                *seqnum = ret;
         }
 
-        f->header->tail_entry_seqnum = htole64(r);
+        f->header->tail_entry_seqnum = htole64(ret);
 
         if (f->header->head_entry_seqnum == 0)
-                f->header->head_entry_seqnum = htole64(r);
+                f->header->head_entry_seqnum = htole64(ret);
 
-        return r;
+        return ret;
+}
+
+static void journal_file_revert_entry_seqnum(
+                JournalFile *f,
+                uint64_t *seqnum,
+                uint64_t revert_seqnum) {
+
+        assert(f);
+        assert(f->header);
+
+        if (revert_seqnum == 0) /* sequence number 0? can't go back */
+                return;
+
+        /* Undoes the effect of journal_file_entry_seqnum() above: if we fail to append an entry to a file,
+         * let's revert the seqnum we were about to use, so that we can use it on the next entry. */
+
+        if (le64toh(f->header->tail_entry_seqnum) == revert_seqnum)
+                f->header->tail_entry_seqnum = htole64(revert_seqnum - 1);
+
+        if (le64toh(f->header->head_entry_seqnum) == revert_seqnum)
+                f->header->head_entry_seqnum = 0;
+
+        if (seqnum && *seqnum == revert_seqnum)
+                *seqnum = revert_seqnum - 1;
 }
 
 int journal_file_append_object(
@@ -1525,6 +1558,44 @@ int journal_file_find_data_object(
                         ret, ret_offset);
 }
 
+bool journal_field_valid(const char *p, size_t l, bool allow_protected) {
+        const char *a;
+
+        /* We kinda enforce POSIX syntax recommendations for
+           environment variables here, but make a couple of additional
+           requirements.
+
+           http://pubs.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap08.html */
+
+        if (l == (size_t) -1)
+                l = strlen(p);
+
+        /* No empty field names */
+        if (l <= 0)
+                return false;
+
+        /* Don't allow names longer than 64 chars */
+        if (l > 64)
+                return false;
+
+        /* Variables starting with an underscore are protected */
+        if (!allow_protected && p[0] == '_')
+                return false;
+
+        /* Don't allow digits as first character */
+        if (p[0] >= '0' && p[0] <= '9')
+                return false;
+
+        /* Only allow A-Z0-9 and '_' */
+        for (a = p; a < p + l; a++)
+                if ((*a < 'A' || *a > 'Z') &&
+                    (*a < '0' || *a > '9') &&
+                    *a != '_')
+                        return false;
+
+        return true;
+}
+
 static int journal_file_append_field(
                 JournalFile *f,
                 const void *field, uint64_t size,
@@ -1537,6 +1608,9 @@ static int journal_file_append_field(
 
         assert(f);
         assert(field && size > 0);
+
+        if (!journal_field_valid(field, size, true))
+                return -EBADMSG;
 
         hash = journal_file_hash_data(f, field, size);
 
@@ -1936,12 +2010,12 @@ static int journal_file_append_entry_internal(
 #if HAVE_GCRYPT
         r = journal_file_hmac_put_object(f, OBJECT_ENTRY, o, np);
         if (r < 0)
-                return r;
+                goto fail;
 #endif
 
         r = journal_file_link_entry(f, o, np);
         if (r < 0)
-                return r;
+                goto fail;
 
         if (ret)
                 *ret = o;
@@ -1950,6 +2024,10 @@ static int journal_file_append_entry_internal(
                 *ret_offset = np;
 
         return 0;
+
+fail:
+        journal_file_revert_entry_seqnum(f, seqnum, le64toh(o->entry.seqnum));
+        return r;
 }
 
 void journal_file_post_change(JournalFile *f) {
