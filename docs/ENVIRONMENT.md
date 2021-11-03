@@ -222,7 +222,7 @@ All tools:
 
 `systemd-sulogin-shell`:
 
-* `$SYSTEMD_SULOGIN_FORCE=1` — This skips asking for the root password if the
+* `$SYSTEMD_SULOGIN_FORCE=0` — Do not skip asking for the root password if the
   root password is not available (such as when the root account is locked).
   See `sulogin(8)` for more details.
 

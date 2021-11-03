@@ -104,7 +104,8 @@ int main(int argc, char *argv[]) {
 
         print_mode(argc > 1 ? argv[1] : "");
 
-        if (getenv_bool("SYSTEMD_SULOGIN_FORCE") > 0)
+        /* if not set or set to any positive or negative value */
+        if (getenv_bool("SYSTEMD_SULOGIN_FORCE") != 0)
                 /* allows passwordless logins if root account is locked. */
                 sulogin_cmdline[1] = "--force";
 
