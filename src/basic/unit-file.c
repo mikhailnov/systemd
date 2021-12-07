@@ -274,7 +274,6 @@ int unit_file_build_name_map(
         }
 
         STRV_FOREACH(dir, (char**) lp->search_path) {
-                struct dirent *de;
                 _cleanup_closedir_ DIR *d = NULL;
 
                 d = opendir(*dir);
