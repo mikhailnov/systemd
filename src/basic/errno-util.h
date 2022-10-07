@@ -6,6 +6,13 @@
 
 #include "macro.h"
 
+#define ERRNO_BUF_LEN 1024
+/* Note: the lifetime of the compound literal is the immediately surrounding block,
+ * see C11 §6.5.2.5, and
+ * https://stackoverflow.com/questions/34880638/compound-literal-lifetime-and-if-blocks
+ *
+ * Note that we use the GNU variant of strerror_r() here. */
+#define STRERROR(errnum) strerror_r(abs(errnum), (char[ERRNO_BUF_LEN]){}, ERRNO_BUF_LEN)
 /* A helper to print an error message or message for functions that return 0 on EOF.
  * Note that we can't use ({ … }) to define a temporary variable, so errnum is
  * evaluated twice. */
