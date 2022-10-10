@@ -6,6 +6,11 @@
 
 #include "macro.h"
 
+/* A helper to print an error message or message for functions that return 0 on EOF.
+ * Note that we can't use ({ … }) to define a temporary variable, so errnum is
+ * evaluated twice. */
+#define STRERROR_OR_EOF(errnum) ((errnum) != 0 ? STRERROR(errnum) : "Unexpected EOF")
+
 static inline void _reset_errno_(int *saved_errno) {
         if (*saved_errno < 0) /* Invalidated by UNPROTECT_ERRNO? */
                 return;
