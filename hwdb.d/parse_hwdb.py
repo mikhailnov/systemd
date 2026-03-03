@@ -75,7 +75,7 @@ UDEV_TAG = Word(string.ascii_uppercase, alphanums + '_')
 TYPES = {'mouse':    ('usb', 'bluetooth', 'ps2', '*'),
          'evdev':    ('name', 'atkbd', 'input'),
          'fb':       ('pci', 'vmbus'),
-         'id-input': ('modalias'),
+         'id-input': ('modalias', 'bluetooth', 'i2c', 'usb'),
          'touchpad': ('i8042', 'rmi', 'bluetooth', 'usb'),
          'joystick': ('i8042', 'rmi', 'bluetooth', 'usb'),
          'keyboard': ('name', ),
@@ -106,6 +106,7 @@ GENERAL_MATCHES = {'acpi',
                    'vmbus',
                    'OUI',
                    'ieee1394',
+                   'dmi',
                    }
 
 def upperhex_word(length):
@@ -180,8 +181,9 @@ def property_grammar():
              ('ID_HARDWARE_WALLET', Or((Literal('0'), Literal('1')))),
              ('ID_SOFTWARE_RADIO', Or((Literal('0'), Literal('1')))),
              ('ID_MM_DEVICE_IGNORE', Or((Literal('0'), Literal('1')))),
+             ('ID_NET_AUTO_LINK_LOCAL_ONLY', Or((Literal('0'), Literal('1')))),
              ('POINTINGSTICK_SENSITIVITY', INTEGER),
-             ('ID_INPUT_JOYSTICK_INTEGRATION', Or(('internal', 'external'))),
+             ('ID_INTEGRATION', Or(('internal', 'external'))),
              ('ID_INPUT_TOUCHPAD_INTEGRATION', Or(('internal', 'external'))),
              ('XKB_FIXED_LAYOUT', xkb_setting),
              ('XKB_FIXED_VARIANT', xkb_setting),
@@ -200,12 +202,22 @@ def property_grammar():
              ('ID_INFRARED_CAMERA', Or((Literal('0'), Literal('1')))),
              ('ID_CAMERA_DIRECTION', Or(('front', 'rear'))),
              ('SOUND_FORM_FACTOR', Or(('internal', 'webcam', 'speaker', 'headphone', 'headset', 'handset', 'microphone'))),
+             ('ID_SYS_VENDOR_IS_RUBBISH', Or((Literal('0'), Literal('1')))),
+             ('ID_PRODUCT_NAME_IS_RUBBISH', Or((Literal('0'), Literal('1')))),
+             ('ID_PRODUCT_VERSION_IS_RUBBISH', Or((Literal('0'), Literal('1')))),
+             ('ID_BOARD_VERSION_IS_RUBBISH', Or((Literal('0'), Literal('1')))),
+             ('ID_PRODUCT_SKU_IS_RUBBISH', Or((Literal('0'), Literal('1')))),
+             ('ID_CHASSIS_ASSET_TAG_IS_RUBBISH', Or((Literal('0'), Literal('1')))),
+             ('ID_CHASSIS', name_literal),
+             ('ID_SYSFS_ATTRIBUTE_MODEL', name_literal),
+             ('ID_NET_NAME_FROM_DATABASE', name_literal),
+             ('ID_NET_NAME_INCLUDE_DOMAIN', Or((Literal('0'), Literal('1')))),
             )
     fixed_props = [Literal(name)('NAME') - Suppress('=') - val('VALUE')
                    for name, val in props]
     kbd_props = [Regex(r'KEYBOARD_KEY_[0-9a-f]+')('NAME')
                  - Suppress('=') -
-                 ('!' ^ (Optional('!') - Word(alphanums + '_')))('VALUE')
+                 Group('!' ^ (Optional('!') - Word(alphanums + '_')))('VALUE')
                 ]
     abs_props = [Regex(r'EVDEV_ABS_[0-9a-f]{2}')('NAME')
                  - Suppress('=') -
@@ -241,23 +253,24 @@ def check_matches(groups):
     matches = sum((group[0] for group in groups), [])
 
     # This is a partial check. The other cases could be also done, but those
-    # two are most commonly wrong.
-    grammars = { 'usb' : 'v' + upperhex_word(4) + Optional('p' + upperhex_word(4) + Optional(':')) + '*',
-                 'pci' : 'v' + upperhex_word(8) + Optional('d' + upperhex_word(8) + Optional(':')) + '*',
+    # three are the most commonly wrong.
+    grammars = {
+        'bluetooth' : 'v' + upperhex_word(4) + Optional('p' + upperhex_word(4) + Optional(':')) + '*',
+        'usb' : 'v' + upperhex_word(4) + Optional('p' + upperhex_word(4) + Optional(':')) + '*',
+        'pci' : 'v' + upperhex_word(8) + Optional('d' + upperhex_word(8) + Optional(':')) + '*',
     }
 
     for match in matches:
         prefix, rest = match.split(':', maxsplit=1)
-        gr = grammars.get(prefix)
-        if gr:
+        if gr := grammars.get(prefix):
             # we check this first to provide an easy error message
             if rest[-1] not in '*:':
-                error('pattern {} does not end with "*" or ":"', match)
+                error('Pattern {!r} does not end with "*" or ":"', match)
 
             try:
                 gr.parseString(rest)
             except ParseBaseException as e:
-                error('Pattern {!r} is invalid: {}', rest, e)
+                error('Pattern {!r} is invalid: {}', match, e)
                 continue
 
     matches.sort()
@@ -336,10 +349,14 @@ def print_summary(fname, groups):
     print(f'{fname}: {len(groups)} match groups, {n_matches} matches, {n_props} properties')
 
     if n_matches == 0 or n_props == 0:
-        error(f'{fname}: no matches or props')
+        print(f'{fname}: no matches or props')
 
 if __name__ == '__main__':
-    args = sys.argv[1:] or sorted(glob.glob(os.path.dirname(sys.argv[0]) + '/[678][0-9]-*.hwdb'))
+    args = sys.argv[1:] or sorted([
+        os.path.dirname(sys.argv[0]) + '/20-dmi-id.hwdb',
+        os.path.dirname(sys.argv[0]) + '/20-net-ifname.hwdb',
+        *glob.glob(os.path.dirname(sys.argv[0]) + '/[678][0-9]-*.hwdb'),
+    ])
 
     for fname in args:
         groups = parse(fname)
